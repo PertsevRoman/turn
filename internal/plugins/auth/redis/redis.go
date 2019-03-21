@@ -1,10 +1,13 @@
 package main
 
 import (
+	"fmt"
+	"github.com/go-redis/redis"
 	"github.com/pions/stun"
 	"github.com/xo/dburl"
 	"log"
 	"os"
+	"strconv"
 )
 
 type turnServer struct {
@@ -12,7 +15,34 @@ type turnServer struct {
 }
 
 func (m *turnServer) AuthenticateRequest(username string, srcAddr *stun.TransportAddr) (password string, ok bool) {
-	return "", true
+
+	port := m.dsn.Port()
+
+	if port == "" {
+		port = "6379"
+	}
+
+	addr := fmt.Sprintf("%s:%s", m.dsn.Host, port)
+
+	db, err := strconv.Atoi(m.dsn.Scheme)
+
+	if err != nil {
+		log.Panic("Redis DB scheme not parsed")
+	}
+
+	conn := redis.NewClient(&redis.Options{
+		Addr:     addr,
+		Password: "",
+		DB:       db,
+	})
+
+	password, err = conn.Get(username).Result()
+
+	if err == nil {
+		return password, true
+	}
+
+	return "", false
 }
 
 func (m *turnServer) PrintUsers() {
