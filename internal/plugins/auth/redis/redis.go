@@ -15,7 +15,6 @@ type turnServer struct {
 }
 
 func (m *turnServer) AuthenticateRequest(username string, srcAddr *stun.TransportAddr) (password string, ok bool) {
-
 	port := m.dsn.Port()
 
 	if port == "" {
@@ -24,7 +23,7 @@ func (m *turnServer) AuthenticateRequest(username string, srcAddr *stun.Transpor
 
 	addr := fmt.Sprintf("%s:%s", m.dsn.Host, port)
 
-	db, err := strconv.Atoi(m.dsn.Scheme)
+	db, err := strconv.Atoi(m.dsn.Path[1:])
 
 	if err != nil {
 		log.Panic("Redis DB scheme not parsed")
@@ -51,10 +50,23 @@ func (m *turnServer) PrintUsers() {
 func (m *turnServer) Init() {
 	dsn := os.Getenv("DB_DSN")
 	if dsn != "" {
+		_, aliases := dburl.SchemeDriverAndAliases("redis")
+
+		if aliases == nil {
+			dburl.Register(dburl.Scheme{
+				Driver:    "redis",
+				Generator: dburl.GenScheme("redis"),
+				Proto:     0,
+				Opaque:    false,
+				Aliases:   []string{},
+				Override:  "",
+			})
+		}
+
 		dsnMap, err := dburl.Parse(dsn)
 
 		if err != nil {
-			log.Panic("Cannot parse DB dsn")
+			log.Panic("Cannot parse DB dsn: ", err)
 		}
 
 		m.dsn = dsnMap
