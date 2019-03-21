@@ -1,76 +1,16 @@
 package main
 
 import (
-	"flag"
-	"github.com/pions/stun"
+	"fmt"
 	"github.com/pions/turn"
-	"gopkg.in/ini.v1"
 	"log"
 	"os"
-	"regexp"
+	"plugin"
 	"strconv"
 )
 
-type myTurnServer struct {
-	usersMap map[string]string
-}
-
-func (m *myTurnServer) AuthenticateRequest(username string, srcAddr *stun.TransportAddr) (password string, ok bool) {
-	if password, ok := m.usersMap[username]; ok {
-		return password, true
-	}
-
-	return "", false
-}
-
-func getIniConf() (port int, users map[string]string, realm string) {
-	config := flag.Lookup("cfg").Value.String()
-	log.Printf("Use config %s", config)
-
-	cfg, err := ini.Load(config)
-
-	if err != nil {
-		log.Panic("Config file not loaded")
-		os.Exit(1)
-	}
-
-	port, err = cfg.Section("server").Key("port").Int()
-
-	if err != nil {
-		log.Panic("Port is not specified in config file")
-		os.Exit(1)
-	}
-
-	usersString := cfg.Section("users").Key("users").String()
-
-	if usersString == "" {
-		log.Panic("Users is not defined in config file")
-	}
-
-	usersMap := make(map[string]string)
-	for _, kv := range regexp.MustCompile(`(\w+)=(\w+)`).FindAllStringSubmatch(usersString, -1) {
-		usersMap[kv[1]] = kv[2]
-	}
-
-	realm = cfg.Section("users").Key("realm").String()
-	if realm == "" {
-		log.Panic("Realm is not defined in config file")
-	}
-
-	return port, usersMap, realm
-}
-
-func getEnvConf() (port int, users map[string]string, realm string) {
+func getEnvConf() (port int, realm string) {
 	log.Printf("Use environment variables")
-
-	usersMap := make(map[string]string)
-	usersString := os.Getenv("USERS")
-	if usersString == "" {
-		log.Panic("USERS is a required environment variable")
-	}
-	for _, kv := range regexp.MustCompile(`(\w+)=(\w+)`).FindAllStringSubmatch(usersString, -1) {
-		usersMap[kv[1]] = kv[2]
-	}
 
 	realm = os.Getenv("REALM")
 	if realm == "" {
@@ -87,33 +27,48 @@ func getEnvConf() (port int, users map[string]string, realm string) {
 		log.Panic(err)
 	}
 
-	return udpPort, usersMap, realm
+	return udpPort, realm
 }
 
-type config func() (port int, users map[string]string, realm string)
-
-func main() {
-	m := &myTurnServer{usersMap: make(map[string]string)}
-
-	var configFn config
-
-	config := flag.String("cfg", "config.ini", "Configuration file")
-	flag.Parse()
-
-	if *config == "" {
-		configFn = getEnvConf
+func loadTurnServer() turn.Server {
+	plug, err := plugin.Open("./plugins/env.so")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	} else {
-		configFn = getIniConf
+		fmt.Println("Plugin loaded")
 	}
 
-	port, users, realm := configFn()
+	symTurnServer, err := plug.Lookup("TurnServer")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	} else {
+		fmt.Println("TurnServer symbol loaded")
+	}
 
-	m.usersMap = users
+	var turnServer turn.Server
+	turnServer, ok := symTurnServer.(turn.Server)
+
+	if !ok {
+		fmt.Println(err)
+		os.Exit(1)
+	} else {
+		fmt.Println("TurnServer instance loaded")
+	}
+
+	return turnServer
+}
+
+func main() {
+	turnServer := loadTurnServer()
+	port, realm := getEnvConf()
 
 	log.Printf("Starting on port %d", port)
 
+	turnServer.Init()
 	turn.Start(turn.StartArguments{
-		Server:  m,
+		Server:  turnServer,
 		Realm:   realm,
 		UDPPort: port,
 	})

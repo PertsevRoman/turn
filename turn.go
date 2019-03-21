@@ -12,6 +12,8 @@ import (
 
 // Server is the interface for Pion TURN server callbacks
 type Server interface {
+	Init()
+	PrintUsers()
 	AuthenticateRequest(username string, srcAddr *stun.TransportAddr) (password string, ok bool)
 }
 
