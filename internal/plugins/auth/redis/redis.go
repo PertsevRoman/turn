@@ -2,38 +2,32 @@ package main
 
 import (
 	"github.com/pions/stun"
+	"github.com/xo/dburl"
 	"log"
 	"os"
-	"regexp"
 )
 
 type turnServer struct {
-	usersMap map[string]string
+	dsn *dburl.URL
 }
 
 func (m *turnServer) AuthenticateRequest(username string, srcAddr *stun.TransportAddr) (password string, ok bool) {
-	if password, ok := m.usersMap[username]; ok {
-		return password, true
-	}
-
-	return "", false
+	return "", true
 }
 
 func (m *turnServer) PrintUsers() {
-	for key, val := range m.usersMap {
-		log.Println(key, val)
-	}
 }
 
 func (m *turnServer) Init() {
-	m.usersMap = make(map[string]string)
+	dsn := os.Getenv("DB_DSN")
+	if dsn != "" {
+		dsnMap, err := dburl.Parse(dsn)
 
-	usersString := os.Getenv("USERS")
-	if usersString == "" {
-		log.Panic("USERS is a required environment variable")
-	}
-	for _, kv := range regexp.MustCompile(`(\w+)=(\w+)`).FindAllStringSubmatch(usersString, -1) {
-		m.usersMap[kv[1]] = kv[2]
+		if err != nil {
+			log.Panic("Cannot parse DB dsn")
+		}
+
+		m.dsn = dsnMap
 	}
 }
 

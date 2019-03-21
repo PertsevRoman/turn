@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/pions/turn"
+	"github.com/xo/dburl"
 	"log"
 	"os"
 	"plugin"
@@ -31,13 +32,20 @@ func getEnvConf() (port int, realm string) {
 }
 
 func loadTurnServer() turn.Server {
-	plug, err := plugin.Open("./plugins/env.so")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	} else {
-		fmt.Println("Plugin loaded")
+	pluginPath := "./plugins/env.so"
+
+	dsn := os.Getenv("DB_DSN")
+	if dsn != "" {
+		dsnMap, err := dburl.Parse(dsn)
+
+		if err != nil {
+			log.Panic("Cannot parse DB dsn")
+		}
+
+		pluginPath = fmt.Sprintf("./plugins/%s.so", dsnMap.Driver)
 	}
+
+	plug, err := plugin.Open(pluginPath)
 
 	symTurnServer, err := plug.Lookup("TurnServer")
 	if err != nil {
