@@ -34,6 +34,7 @@ func getEnvConf() (port int, realm string) {
 func loadTurnServer() turn.Server {
 	pluginPath := "./plugins/env.so"
 
+	// TODO remove dburl dependency
 	dsn := os.Getenv("DB_DSN")
 	if dsn != "" {
 		dsnMap, err := dburl.Parse(dsn)
