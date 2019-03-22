@@ -19,12 +19,6 @@ func (m *turnServer) AuthenticateRequest(username string, srcAddr *stun.Transpor
 	return "", false
 }
 
-func (m *turnServer) PrintUsers() {
-	for key, val := range m.usersMap {
-		log.Println(key, val)
-	}
-}
-
 func (m *turnServer) Init() {
 	m.usersMap = make(map[string]string)
 

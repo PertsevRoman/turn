@@ -58,9 +58,6 @@ func (m *turnServer) AuthenticateRequest(username string, srcAddr *stun.Transpor
 	return "", false
 }
 
-func (m *turnServer) PrintUsers() {
-}
-
 func (m *turnServer) Init() {
 	dsn := os.Getenv("DB_DSN")
 	m.dsn = GetDsnParts(dsn)
