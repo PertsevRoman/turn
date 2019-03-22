@@ -31,7 +31,7 @@ func GetDsnParts(url string) (parts turn.DsnParts) {
 func (m *turnServer) AuthenticateRequest(username string, srcAddr *stun.TransportAddr) (password string, ok bool) {
 	port := m.dsn.Port
 
-	addr := fmt.Sprintf("%s:%d", m.dsn.Host, port)
+	addr := fmt.Sprintf("%s:%s", m.dsn.Host, port)
 
 	dbPassword := m.dsn.Password
 
