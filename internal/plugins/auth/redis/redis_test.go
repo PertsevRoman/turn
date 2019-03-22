@@ -48,20 +48,3 @@ func TestGetDsnParts_CaseFour(t *testing.T) {
 	assert.Equal(t, parts.Password, "second")
 	assert.Equal(t, parts.Db, "4")
 }
-
-//func TestTurnServer_AuthenticateRequest(t *testing.T) {
-//	m := turnServer{}
-//
-//	m.Init()
-//
-//	ip := net.ParseIP("127.0.0.1")
-//
-//	password, ok := m.AuthenticateRequest("tell", &stun.TransportAddr{
-//		Port: 3456,
-//		IP:   ip,
-//	})
-//
-//	if !ok || password != "test" {
-//		t.Fail()
-//	}
-//}

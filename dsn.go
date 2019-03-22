@@ -15,6 +15,8 @@ type DsnParts struct {
 	Query    map[string]string
 }
 
+// TODO https://github.com/go-sql-driver/mysql/blob/dc029498cb5a3efbe44e54dcb5cf080d451450fa/utils.go#L81
+// remove regexp
 func GetDnsMatches(url string) [][]string {
 	comp := `^(?P<proto>.*?):\/\/(?:(?P<user>.*?)(?::(?P<passwd>.*))?@)?(?:(?P<net>[^\(\:]*)\:?(?P<port>[0-9]{0,5}))?\/(?P<dbname>.*?)(?:\?(?P<params>[^\?]*))?$`
 	r, err := regexp.Compile(comp)
