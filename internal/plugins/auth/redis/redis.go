@@ -15,32 +15,14 @@ type turnServer struct {
 }
 
 func GetDsnParts(url string) (parts turn.DsnParts) {
-	var port int
-	var db string
+	parts = turn.MakeDsnParts(url)
 
-	matches := turn.GetDnsMatches(url)
-
-	proto := matches[0][1]
-
-	if matches[0][5] == "" {
-		port = 6379
-	} else {
-		port, _ = strconv.Atoi(matches[0][5])
+	if parts.Port == "" {
+		parts.Port = "6379"
 	}
 
-	if matches[0][6] == "" {
-		db = "0"
-	} else {
-		db = matches[0][6]
-	}
-
-	parts = turn.DsnParts{
-		Proto:    proto,
-		Host:     matches[0][4],
-		Username: matches[0][2],
-		Password: matches[0][3],
-		Port:     port,
-		Db:       db,
+	if parts.Db == "" {
+		parts.Db = "0"
 	}
 
 	return parts

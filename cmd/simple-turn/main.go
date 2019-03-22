@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/pions/turn"
-	"github.com/xo/dburl"
 	"log"
 	"os"
 	"plugin"
@@ -36,23 +35,11 @@ func loadTurnServer() turn.Server {
 
 	// TODO remove dburl dependency
 	dsn := os.Getenv("DB_DSN")
+
 	if dsn != "" {
-		dburl.Register(dburl.Scheme{
-			Driver:    "redis",
-			Generator: dburl.GenScheme("redis"),
-			Proto:     0,
-			Opaque:    false,
-			Aliases:   []string{},
-			Override:  "",
-		})
+		parts := turn.MakeDsnParts(dsn)
 
-		dsnMap, err := dburl.Parse(dsn)
-
-		if err != nil {
-			log.Panic("Cannot parse DB dsn: ", err)
-		}
-
-		pluginPath = fmt.Sprintf("./plugins/%s.so", dsnMap.Driver)
+		pluginPath = fmt.Sprintf("./plugins/%s.so", parts.Proto)
 	}
 
 	plug, err := plugin.Open(pluginPath)
