@@ -4,26 +4,56 @@ import (
 	"fmt"
 	"github.com/go-redis/redis"
 	"github.com/pions/stun"
-	"github.com/xo/dburl"
+	"github.com/pions/turn"
 	"log"
 	"os"
 	"strconv"
 )
 
 type turnServer struct {
-	dsn *dburl.URL
+	dsn turn.DsnParts
+}
+
+func GetDsnParts(url string) (parts turn.DsnParts) {
+	var port int
+	var db string
+
+	matches := turn.GetDnsMatches(url)
+
+	proto := matches[0][1]
+
+	if matches[0][5] == "" {
+		port = 6379
+	} else {
+		port, _ = strconv.Atoi(matches[0][5])
+	}
+
+	if matches[0][6] == "" {
+		db = "0"
+	} else {
+		db = matches[0][6]
+	}
+
+	parts = turn.DsnParts{
+		Proto:    proto,
+		Host:     matches[0][4],
+		Username: matches[0][2],
+		Password: matches[0][3],
+		Port:     port,
+		Db:       db,
+	}
+
+	return parts
 }
 
 func (m *turnServer) AuthenticateRequest(username string, srcAddr *stun.TransportAddr) (password string, ok bool) {
-	port := m.dsn.Port()
+	port := m.dsn.Port
 
-	if port == "" {
-		port = "6379"
-	}
+	addr := fmt.Sprintf("%s:%d", m.dsn.Host, port)
 
-	addr := fmt.Sprintf("%s:%s", m.dsn.Host, port)
+	dbPassword := m.dsn.Password
 
-	db, err := strconv.Atoi(m.dsn.Path[1:])
+	db, err := strconv.Atoi(m.dsn.Db)
 
 	if err != nil {
 		log.Panic("Redis DB scheme not parsed")
@@ -31,9 +61,11 @@ func (m *turnServer) AuthenticateRequest(username string, srcAddr *stun.Transpor
 
 	conn := redis.NewClient(&redis.Options{
 		Addr:     addr,
-		Password: "",
+		Password: dbPassword,
 		DB:       db,
 	})
+
+	defer conn.Close()
 
 	password, err = conn.Get(username).Result()
 
@@ -49,28 +81,7 @@ func (m *turnServer) PrintUsers() {
 
 func (m *turnServer) Init() {
 	dsn := os.Getenv("DB_DSN")
-	if dsn != "" {
-		_, aliases := dburl.SchemeDriverAndAliases("redis")
-
-		if aliases == nil {
-			dburl.Register(dburl.Scheme{
-				Driver:    "redis",
-				Generator: dburl.GenScheme("redis"),
-				Proto:     0,
-				Opaque:    false,
-				Aliases:   []string{},
-				Override:  "",
-			})
-		}
-
-		dsnMap, err := dburl.Parse(dsn)
-
-		if err != nil {
-			log.Panic("Cannot parse DB dsn: ", err)
-		}
-
-		m.dsn = dsnMap
-	}
+	m.dsn = GetDsnParts(dsn)
 }
 
 var TurnServer turnServer
