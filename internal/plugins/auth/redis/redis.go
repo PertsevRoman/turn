@@ -43,6 +43,7 @@ func (m *turnServer) AuthenticateRequest(username string, srcAddr *stun.Transpor
 		log.Panic("Redis DB scheme not parsed")
 	}
 
+	log.Printf("Connecting to server...")
 	conn := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: dbPassword,
@@ -51,18 +52,24 @@ func (m *turnServer) AuthenticateRequest(username string, srcAddr *stun.Transpor
 
 	defer conn.Close()
 
+	log.Printf("User search...\n")
 	password, err = conn.Get(username).Result()
 
 	if err == nil {
+		log.Printf("User found: %s\n", username)
 		return password, true
 	}
 
+	log.Printf("User not found: %s\n", username)
 	return "", false
 }
 
 func (m *turnServer) Init() {
 	dsn := os.Getenv("DB_DSN")
 	m.dsn = GetDsnParts(dsn)
+
+	log.Printf("Redis host: %s:%s", m.dsn.Host, m.dsn.Port)
+	log.Printf("Redis DB: %s", m.dsn.Db)
 }
 
 var TurnServer turnServer

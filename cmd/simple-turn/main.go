@@ -31,7 +31,7 @@ func getEnvConf() (port int, realm string) {
 }
 
 func loadTurnServer() turn.Server {
-	pluginPath := "./plugins/env.so"
+	pluginPath := "plugins/env.so"
 
 	// TODO remove dburl dependency
 	dsn := os.Getenv("DB_DSN")
@@ -39,10 +39,16 @@ func loadTurnServer() turn.Server {
 	if dsn != "" {
 		parts := turn.MakeDsnParts(dsn)
 
-		pluginPath = fmt.Sprintf("./plugins/%s.so", parts.Proto)
+		pluginPath = fmt.Sprintf("plugins/%s.so", parts.Proto)
+
+		log.Printf("Load module: %s", pluginPath)
 	}
 
 	plug, err := plugin.Open(pluginPath)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	symTurnServer, err := plug.Lookup("TurnServer")
 	if err != nil {
