@@ -17,6 +17,7 @@ FROM alpine
 
 WORKDIR /app
 RUN mkdir plugins
+COPY --from=builder /src/entrypoint.sh /app/entrypoint.sh
 COPY --from=builder /src/app/turn /app/turn
 COPY --from=builder /src/app/plugins/env.so /app/plugins/env.so
 COPY --from=builder /src/app/plugins/redis.so /app/plugins/redis.so
