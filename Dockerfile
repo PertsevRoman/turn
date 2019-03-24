@@ -5,6 +5,7 @@ ENV USERS username=password
 ENV UDP_PORT 3478
 
 RUN mkdir /build
+RUN mkdir /build/plugins
 WORKDIR /src
 
 ADD . .
@@ -16,6 +17,7 @@ RUN go build -buildmode=plugin -o internal/plugins/auth/redis/redis.go /build/pl
 FROM alpine
 
 WORKDIR /app
+RUN mkdir plugins
 COPY --from=builder /build/turn /app/turn
 COPY --from=builder /build/plugins/env.so /app/plugins/env.so
 COPY --from=builder /build/plugins/redis.so /app/plugins/redis.so
