@@ -17,8 +17,8 @@ FROM alpine
 WORKDIR /app
 RUN mkdir plugins
 COPY --from=builder /src/app/turn /app/turn
-COPY --from=builder /build/app/plugins/env.so /app/plugins/env.so
-COPY --from=builder /build/app/plugins/redis.so /app/plugins/redis.so
+COPY --from=builder /src/app/plugins/env.so /app/plugins/env.so
+COPY --from=builder /src/app/plugins/redis.so /app/plugins/redis.so
 RUN chmod +x /app/turn
 
 ENTRYPOINT [ "/app/turn" ]
