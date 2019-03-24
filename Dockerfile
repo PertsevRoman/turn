@@ -20,6 +20,8 @@ RUN mkdir plugins
 COPY --from=builder /src/app/turn /app/turn
 COPY --from=builder /src/app/plugins/env.so /app/plugins/env.so
 COPY --from=builder /src/app/plugins/redis.so /app/plugins/redis.so
-RUN chmod +x /app/turn
 
-ENTRYPOINT [ "/app/turn" ]
+RUN chmod +x /app/turn
+RUN chmod +x /app/entrypoint.sh
+
+ENTRYPOINT /app/entrypoint.sh
