@@ -5,6 +5,7 @@ import (
 	"github.com/pions/turn"
 	"log"
 	"os"
+	"path/filepath"
 	"plugin"
 	"strconv"
 )
@@ -41,10 +42,21 @@ func loadTurnServer() turn.Server {
 
 		pluginPath = fmt.Sprintf("plugins/%s.so", parts.Proto)
 
-		log.Printf("Load module: %s", pluginPath)
 	}
 
-	plug, err := plugin.Open(pluginPath)
+	pluginFullPath, err := filepath.Abs(pluginPath)
+	log.Printf("Load module: %s", pluginFullPath)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	if _, err := os.Stat("/path/to/whatever"); os.IsNotExist(err) {
+		fmt.Println("Plugin path is not exists")
+		os.Exit(1)
+	}
+
+	plug, err := plugin.Open(pluginFullPath)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
