@@ -9,8 +9,8 @@ WORKDIR /src
 ADD . .
 
 RUN go build -o app/turn cmd/simple-turn/main.go
-RUN go build -buildmode=plugin -o internal/plugins/auth/env/env.go app/plugins/env.so
-RUN go build -buildmode=plugin -o internal/plugins/auth/redis/redis.go app/plugins/redis.so
+RUN go build -buildmode=plugin -o app/plugins/env.so internal/plugins/auth/env/env.go
+RUN go build -buildmode=plugin -o app/plugins/redis.so internal/plugins/auth/redis/redis.go
 
 FROM alpine
 
