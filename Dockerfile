@@ -3,7 +3,7 @@ FROM golang:latest as builder
 ENV REALM localhost
 ENV USERS ""
 ENV DB_DSN ""
-ENV UDP_PORT 3478
+ENV PORT 3478
 
 WORKDIR /src
 
