@@ -16,7 +16,7 @@ RUN go build -buildmode=plugin -o app/plugins/redis.so internal/plugins/auth/red
 FROM alpine
 
 WORKDIR /app
-RUN mkdir plugins
+RUN mkdir /app/plugins
 COPY --from=builder /src/entrypoint.sh /app/entrypoint.sh
 COPY --from=builder /src/app/turn /app/turn
 COPY --from=builder /src/app/plugins/env.so /app/plugins/env.so
