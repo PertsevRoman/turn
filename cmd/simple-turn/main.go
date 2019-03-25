@@ -51,7 +51,7 @@ func loadTurnServer() turn.Server {
 		os.Exit(1)
 	}
 
-	if _, err := os.Stat("/path/to/whatever"); os.IsNotExist(err) {
+	if _, err := os.Stat(pluginFullPath); os.IsNotExist(err) {
 		fmt.Println("Plugin path is not exists")
 		os.Exit(1)
 	}

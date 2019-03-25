@@ -1,10 +1,5 @@
 FROM golang:latest as builder
 
-ENV REALM localhost
-ENV USERS ""
-ENV DB_DSN ""
-ENV PORT 3478
-
 WORKDIR /src
 
 ADD . .
@@ -13,7 +8,12 @@ RUN go build -o app/turn cmd/simple-turn/main.go
 RUN go build -buildmode=plugin -o app/plugins/env.so internal/plugins/auth/env/env.go
 RUN go build -buildmode=plugin -o app/plugins/redis.so internal/plugins/auth/redis/redis.go
 
-FROM alpine
+FROM ubuntu
+
+ENV REALM localhost
+ENV USERS ""
+ENV DB_DSN ""
+ENV PORT 3478
 
 WORKDIR /app
 RUN mkdir /app/plugins
@@ -25,4 +25,5 @@ COPY --from=builder /src/app/plugins/redis.so /app/plugins/redis.so
 RUN chmod +x /app/turn
 RUN chmod +x /app/entrypoint.sh
 
-CMD [ "/app/entrypoint.sh" ]
+RUN chmod 755 /app/entrypoint.sh
+ENTRYPOINT /app/entrypoint.sh
