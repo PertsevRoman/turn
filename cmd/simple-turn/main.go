@@ -5,6 +5,7 @@ import (
 	"github.com/pions/turn"
 	"log"
 	"os"
+	"path/filepath"
 	"plugin"
 	"strconv"
 )
@@ -31,7 +32,7 @@ func getEnvConf() (port int, realm string) {
 }
 
 func loadTurnServer() turn.Server {
-	pluginPath := "./plugins/env.so"
+	pluginPath := "plugins/env.so"
 
 	// TODO remove dburl dependency
 	dsn := os.Getenv("DB_DSN")
@@ -39,10 +40,27 @@ func loadTurnServer() turn.Server {
 	if dsn != "" {
 		parts := turn.MakeDsnParts(dsn)
 
-		pluginPath = fmt.Sprintf("./plugins/%s.so", parts.Proto)
+		pluginPath = fmt.Sprintf("plugins/%s.so", parts.Proto)
+
 	}
 
-	plug, err := plugin.Open(pluginPath)
+	pluginFullPath, err := filepath.Abs(pluginPath)
+	log.Printf("Load module: %s", pluginFullPath)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	if _, err := os.Stat("/path/to/whatever"); os.IsNotExist(err) {
+		fmt.Println("Plugin path is not exists")
+		os.Exit(1)
+	}
+
+	plug, err := plugin.Open(pluginFullPath)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	symTurnServer, err := plug.Lookup("TurnServer")
 	if err != nil {

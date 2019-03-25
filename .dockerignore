@@ -1,0 +1,9 @@
+# Created by .ignore support plugin (hsz.mobi)
+.idea
+plugins
+.github
+DESIGN.md
+Dockerfile.client
+Dockerfile.production
+LICENSE.md
+README.md
