@@ -25,4 +25,4 @@ COPY --from=builder /src/app/plugins/redis.so /app/plugins/redis.so
 RUN chmod +x /app/turn
 RUN chmod +x /app/entrypoint.sh
 
-ENTRYPOINT /app/entrypoint.sh
+CMD [ "/app/entrypoint.sh" ]
